@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- 
+    Meta tags for character encoding and responsive design.
+    The charset is set to UTF-8 to support a wide range of characters.
+    The viewport meta tag ensures proper scaling on mobile devices.
+  -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- The title appears in the browser tab -->
+  <title>Room Acoustics Analyzer</title>
+  
+  <!-- 
+    Bootstrap CSS for a responsive layout and pre-defined styles.
+    This link imports Bootstrap from a CDN.
+  -->
+  <link
+    rel="stylesheet"
+    href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+  >
+  
+  <!-- 
+    Font Awesome for scalable vector icons.
+    This is used to include icons (like the file upload icon) in the UI.
+  -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+  >
+  
+  <!-- 
+    Custom stylesheet for additional styles specific to our project.
+    The url_for function dynamically generates the URL for the static file.
+  -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- 
+  Hero Section: A full-width banner that introduces the project.
+  Utilizes Bootstrap's flexbox utilities to center content both vertically and horizontally.
+-->
+<div class="hero-section text-center d-flex flex-column justify-content-center align-items-center">
+  <!-- 
+    Overlay: Adds a semi-transparent layer for visual effect.
+  -->
+  <div class="overlay"></div>
+  <!-- 
+    Hero Content: Contains the main heading and a brief description.
+  -->
+  <div class="hero-content">
+    <h1 class="display-4 text-white mb-3">Room Acoustics Analyzer</h1>
+    <p class="lead text-white">
+      Upload a Room Impulse Response (RIR) file to analyze its acoustic properties.
+    </p>
+  </div>
+</div>
+
+<!-- 
+  Main Container: Holds the file upload form and displays the analysis results.
+-->
+<div class="container my-5">
+  
+  <!-- 
+    Card Component for the Upload Form: 
+    Provides a clean, styled container using Bootstrap's card and shadow classes.
+  -->
+  <div class="card shadow mb-4">
+    <div class="card-body">
+      <!-- 
+        Upload Form: Allows users to select and upload a WAV file.
+        The form is given an ID ("upload-form") for later manipulation with JavaScript.
+      -->
+      <form id="upload-form">
+        <!-- 
+          Form Group: Contains the label and input for file selection.
+          The input accepts only files with a .wav extension.
+        -->
+        <div class="form-group">
+          <label for="rir-file" class="font-weight-bold">Upload Room Impulse Response (WAV)</label>
+          <input
+            type="file"
+            class="form-control-file"
+            id="rir-file"
+            accept=".wav"
+            required
+          >
+        </div>
+        <!-- 
+          Submit Button: Triggers the analysis.
+          Includes a Font Awesome file-upload icon for visual appeal.
+        -->
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="fas fa-file-upload mr-2"></i>Analyze
+        </button>
+      </form>
+    </div>
+  </div>
+  
+  <!-- 
+    Error Message Alert: Initially hidden, it displays error messages if something goes wrong.
+    The "d-none" class keeps it hidden until it needs to be shown.
+  -->
+  <div id="error-message" class="alert alert-danger d-none"></div>
+
+  <!-- 
+    Loader Section: Displays a spinner and message while the analysis is processing.
+    Initially hidden using the "d-none" class.
+  -->
+  <div id="loader" class="d-none text-center my-4">
+    <!-- 
+      Custom Loader: A spinner styled via CSS (defined in style.css).
+    -->
+    <div class="custom-loader mx-auto mb-3"></div>
+    <p class="text-secondary">Analyzing...</p>
+  </div>
+  
+  <!-- 
+    Results Section: Displays the analysis results once available.
+    It includes numerical results as well as visualizations.
+    Initially hidden and becomes visible after processing.
+  -->
+  <div id="results" class="d-none">
+    <h2 class="mb-3">Analysis Results</h2>
+    <!-- 
+      Row for Result Cards: Each card shows a specific acoustic parameter.
+    -->
+    <div class="row">
+      <!-- 
+        Card for RT60 (Reverberation Time):
+        Displays the computed RT60 value in seconds.
+      -->
+      <div class="col-sm-6 col-md-3 mb-3">
+        <div class="card result-card shadow-sm">
+          <div class="card-body text-center">
+            <h5 class="card-title text-primary">RT60</h5>
+            <p class="card-text" id="rt60-value">-</p>
+            <span class="small text-muted">seconds</span>
+          </div>
+        </div>
+      </div>
+      <!-- 
+        Card for Early Decay Time (EDT):
+        Displays the computed EDT value in seconds.
+      -->
+      <div class="col-sm-6 col-md-3 mb-3">
+        <div class="card result-card shadow-sm">
+          <div class="card-body text-center">
+            <h5 class="card-title text-primary">Early Decay Time (EDT)</h5>
+            <p class="card-text" id="edt-value">-</p>
+            <span class="small text-muted">seconds</span>
+          </div>
+        </div>
+      </div>
+      <!-- 
+        Card for Clarity (C80):
+        Displays the computed clarity value (C80) in dB.
+      -->
+      <div class="col-sm-6 col-md-3 mb-3">
+        <div class="card result-card shadow-sm">
+          <div class="card-body text-center">
+            <h5 class="card-title text-primary">Clarity (C80)</h5>
+            <p class="card-text" id="clarity-value">-</p>
+            <span class="small text-muted">dB</span>
+          </div>
+        </div>
+      </div>
+      <!-- 
+        Card for Clarity (C60):
+        Displays the computed clarity value (C60) in dB.
+      -->
+      <div class="col-sm-6 col-md-3 mb-3">
+        <div class="card result-card shadow-sm">
+          <div class="card-body text-center">
+            <h5 class="card-title text-primary">Clarity (C60)</h5>
+            <p class="card-text" id="c60-value">-</p>
+            <span class="small text-muted">dB</span>
+          </div>
+        </div>
+      </div>
+      <!-- 
+        Card for Duration:
+        Shows the total duration of the uploaded audio file in seconds.
+      -->
+      <div class="col-sm-6 col-md-3 mb-3">
+        <div class="card result-card shadow-sm">
+          <div class="card-body text-center">
+            <h5 class="card-title text-primary">Duration</h5>
+            <p class="card-text" id="duration-value">-</p>
+            <span class="small text-muted">seconds</span>
+          </div>
+        </div>
+      </div>
+      <!-- 
+        Card for Sample Rate:
+        Displays the sample rate of the uploaded audio in Hertz (Hz).
+      -->
+      <div class="col-sm-6 col-md-3 mb-3">
+        <div class="card result-card shadow-sm">
+          <div class="card-body text-center">
+            <h5 class="card-title text-primary">Sample Rate</h5>
+            <p class="card-text" id="sample-rate-value">-</p>
+            <span class="small text-muted">Hz</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 
+      Visualizations Section: Displays plots generated from the analysis.
+      Includes Impulse Response, Energy Decay Curve, and Frequency Response.
+    -->
+    <h3 class="mt-5 mb-3">Visualizations</h3>
+    <div class="row">
+      <!-- 
+        Card for Impulse Response Plot:
+        Shows the time-domain plot of the uploaded audio.
+      -->
+      <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+          <div class="card-body text-center">
+            <h5 class="card-title text-primary">Impulse Response</h5>
+            <img
+              id="impulse-plot"
+              src=""
+              alt="Impulse Response Plot"
+              class="img-fluid"
+            >
+          </div>
+        </div>
+      </div>
+      <!-- 
+        Card for Energy Decay Curve Plot:
+        Visualizes the decay of energy over time, helping to estimate RT60.
+      -->
+      <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+          <div class="card-body text-center">
+            <h5 class="card-title text-primary">Energy Decay Curve</h5>
+            <img
+              id="edc-plot"
+              src=""
+              alt="Energy Decay Curve Plot"
+              class="img-fluid"
+            >
+          </div>
+        </div>
+      </div>
+      <!-- 
+        Card for Frequency Response Plot:
+        Displays the spectral content of the audio via a frequency-domain analysis.
+      -->
+      <div class="col-md-12 mb-4">
+        <div class="card shadow-sm">
+          <div class="card-body text-center">
+            <h5 class="card-title text-primary">Frequency Response</h5>
+            <img
+              id="frequency-plot"
+              src=""
+              alt="Frequency Response Plot"
+              class="img-fluid"
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 
+      Recommendations Section: Displays suggestions based on analysis results.
+      This will be populated dynamically via JavaScript.
+    -->
+    <div id="recommendations" class="mt-4"></div>
+  </div>
+</div>
+
+<!-- 
+  Footer Section: Displays copyright information.
+  The current year is dynamically injected using JavaScript.
+-->
+<footer class="text-center py-4 bg-light">
+  <p class="mb-0">
+    Multimedia Programming seminar project developed by 
+    <a href="https://www.linkedin.com/in/waqar628/" target="_blank" rel="noopener noreferrer">
+      Waqar Hassan
+    </a>
+  </p>
+</footer>
+
+
+<!-- 
+  JavaScript Libraries:
+  jQuery, Popper.js, and Bootstrap JS are included for interactivity and proper functioning of Bootstrap components.
+-->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<!-- 
+  Script to update the footer with the current year.
+  This replaces the placeholder "{{ year }}" with the actual year.
+-->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const footer = document.querySelector('footer p');
+    if (footer) {
+      const currentYear = new Date().getFullYear();
+      footer.innerHTML = footer.innerHTML.replace('{{ year }}', currentYear);
+    }
+  });
+</script>
+
+<!-- 
+  Custom JavaScript file:
+  Contains code to handle form submissions, file uploads, and updating the UI with analysis results.
+-->
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
